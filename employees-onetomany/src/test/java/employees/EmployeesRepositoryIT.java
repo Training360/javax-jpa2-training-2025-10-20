@@ -8,13 +8,16 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataJpaTest
-//@AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
-@Sql(statements = "delete from employees")
+@AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
+@Sql(statements = {"delete from addresses", "delete from employees"})
 class EmployeesRepositoryIT {
 
     @Autowired
@@ -22,6 +25,9 @@ class EmployeesRepositoryIT {
 
     @Autowired
     EntityManagerFactory entityManagerFactory;
+
+    @Autowired
+    TransactionTemplate transactionTemplate;
 
     @Test
     @Commit
@@ -37,5 +43,32 @@ class EmployeesRepositoryIT {
 
         assertEquals(1, statistics.getQueryExecutionCount());
     }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void saveWithAddresses() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John");
+            employee.addAddress(new Address("Budapest"));
+            employee.addAddress(new Address("Peking"));
+            repository.save(employee);
+        }
+
+        System.out.println("***");
+//        var loaded = repository.findById(employee.getId()).orElseThrow();
+//        System.out.println(loaded.getName());
+//        System.out.println(loaded.getAddresses().getFirst().getCity());
+
+        transactionTemplate.executeWithoutResult(status -> {
+            var employees = repository.findAll();
+            for (Employee employee : employees) {
+                System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
+            }
+        });
+
+
+    }
+
 
 }

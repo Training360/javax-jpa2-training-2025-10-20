@@ -3,6 +3,9 @@ package employees;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -17,6 +20,16 @@ public class Employee {
 
     @Column(name = "emp_name")
     private String name;
+
+    // Az Employee ebben a kapcsolatban az inverse side
+    // Az Address az owning side, ő felelős a kapcsolatért
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+    List<Address> addresses = new ArrayList<>();
+
+    public void addAddress(Address address) {
+        addresses.add(address);
+        address.setEmployee(this);
+    }
 
     public Employee(String name) {
         this.name = name;
