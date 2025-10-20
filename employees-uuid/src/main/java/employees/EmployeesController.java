@@ -24,7 +24,7 @@ public class EmployeesController {
     }
 
     @GetMapping("/{id}")
-    public EmployeeResource findEmployeeById(@PathVariable("id") long id) {
+    public EmployeeResource findEmployeeById(@PathVariable("id") String id) {
         return employeesService.findEmployeeById(id);
     }
 
@@ -35,8 +35,8 @@ public class EmployeesController {
     }
 
     @PutMapping("/{id}")
-    public EmployeeResource updateEmployee(@PathVariable("id") long id, @RequestBody EmployeeResource command) {
-        if (id != command.id()) {
+    public EmployeeResource updateEmployee(@PathVariable("id") String id, @RequestBody EmployeeResource command) {
+        if (id.equals(command.id())) {
             throw new IllegalArgumentException("ID in path and body must be the same: %d != %d".formatted(id, command.id()));
         }
         return employeesService.updateEmployee(id, command);
@@ -44,7 +44,7 @@ public class EmployeesController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteEmployee(@PathVariable("id") long id) {
+    public void deleteEmployee(@PathVariable("id") String id) {
         employeesService.deleteEmployee(id);
     }
 

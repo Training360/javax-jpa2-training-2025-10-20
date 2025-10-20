@@ -17,7 +17,7 @@ public class EmployeesService {
         return repository.findAll().stream().map(this::toDto).toList();
     }
 
-    public EmployeeResource findEmployeeById(long id) {
+    public EmployeeResource findEmployeeById(String id) {
         return toDto(repository.findById(id).orElseThrow(notFountException(id)));
     }
 
@@ -28,13 +28,13 @@ public class EmployeesService {
     }
 
     @Transactional
-    public EmployeeResource updateEmployee(long id, EmployeeResource command) {
+    public EmployeeResource updateEmployee(String id, EmployeeResource command) {
         Employee employee = repository.findById(id).orElseThrow(notFountException(id));
         employee.setName(command.name());
         return toDto(employee);
     }
 
-    public void deleteEmployee(long id) {
+    public void deleteEmployee(String id) {
         repository.deleteById(id);
     }
 
@@ -42,7 +42,7 @@ public class EmployeesService {
         return new EmployeeResource(employee.getId(), employee.getName());
     }
 
-    private Supplier<EmployeeNotFoundException> notFountException(long id) {
+    private Supplier<EmployeeNotFoundException> notFountException(String id) {
         return () -> new EmployeeNotFoundException("Employee not found with id: %d".formatted(id));
     }
 
