@@ -2,6 +2,10 @@ package employees;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.util.Objects;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,7 +16,10 @@ import lombok.*;
 public class Employee {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "employees_generator")
+    @SequenceGenerator(name = "employees_generator", sequenceName = "employees_seq", allocationSize = 100)
+    // seq értéke 1, increment_size 50, 1 * 50 + [1..50] (51 - 100)
+
     private Long id;
 
     @Column(name = "emp_name")
@@ -20,5 +27,21 @@ public class Employee {
 
     public Employee(String name) {
         this.name = name;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        Employee employee = (Employee) o;
+        return getId() != null && Objects.equals(getId(), employee.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 }
