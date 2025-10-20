@@ -18,6 +18,9 @@ public class Employee {
     @Column(name = "emp_name")
     private String name;
 
+    @OneToOne(mappedBy = "employee")
+    private ParkingPlace parkingPlace;
+
     public Employee(String name) {
         this.name = name;
     }
