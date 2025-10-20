@@ -1,6 +1,8 @@
 package employees;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ class EmployeesRepositoryIT {
     @Autowired
     EntityManagerFactory entityManagerFactory;
 
+    @Autowired
+    EntityManager entityManager;
+
     @Test
     @Commit
     void saveThenFindAll() {
@@ -36,6 +41,20 @@ class EmployeesRepositoryIT {
                 .containsExactly("John");
 
         assertEquals(1, statistics.getQueryExecutionCount());
+    }
+
+    @Test
+    void findByNaturalId() {
+        // https://www.baeldung.com/spring-boot-hibernate-natural-ids
+        var employee = new Employee("abc123", "John");
+        repository.save(employee);
+
+        var loaded = entityManager.unwrap(Session.class)
+                .byNaturalId(Employee.class)
+                .using("cardNumber", "abc123")
+                .load();
+
+        assertEquals("John", loaded.getName());
     }
 
 }
