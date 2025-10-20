@@ -29,7 +29,6 @@ public class EmployeesController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<EmployeeResource> createEmployee(@Valid @RequestBody EmployeeResource command, UriComponentsBuilder builder) {
         var resource = employeesService.createEmployee(command);
         return ResponseEntity.created(builder.path("/api/employees/{id}").buildAndExpand(resource.id()).toUri()).body(resource);
@@ -37,6 +36,9 @@ public class EmployeesController {
 
     @PutMapping("/{id}")
     public EmployeeResource updateEmployee(@PathVariable("id") long id, @RequestBody EmployeeResource command) {
+        if (id != command.id()) {
+            throw new IllegalArgumentException("ID in path and body must be the same: %d != %d".formatted(id, command.id()));
+        }
         return employeesService.updateEmployee(id, command);
     }
 
