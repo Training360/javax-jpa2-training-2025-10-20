@@ -139,11 +139,60 @@ class EmployeesRepositoryIT {
 //            System.out.println(employee.getName());
 //        }
 
-        var ids = repository.findAllIds(PageRequest.of(2, 3));
-        var employees = repository.findAllById(ids);
+        // Slice és Page közötti különbség: Slice esetén nincs count
+        var page = repository.findAllIds(PageRequest.of(2, 3));
+        //System.out.println(page.getTotalElements());
+        List<Long> ids = page.getContent();
+        var employees = repository.findAllWithAddressesByIds(ids);
         for (Employee employee : employees) {
             System.out.println(employee.getName());
         }
+    }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void cursorBasedPaging() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John " + i);
+            employee.addAddress(new Address("Budapest"));
+            employee.addAddress(new Address("Peking"));
+            repository.save(employee);
+        }
+
+        long lastId = 0;
+        while (true) {
+            var employee = repository.findAllResourcesGreaterThan(lastId, Pageable.ofSize(3));
+            if (employee.isEmpty()) {
+                break;
+            }
+            System.out.println(employee.getContent().getFirst().name() + " - " + employee.getContent().getLast().name());
+            lastId = employee.getContent().getLast().id();
+        }
+    }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void streamReturnValue() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John " + i);
+            employee.addAddress(new Address("Budapest"));
+            employee.addAddress(new Address("Peking"));
+            repository.save(employee);
+        }
+
+        var employees = repository.findAll();
+        var namesFromIteration = employees.stream().map(Employee::getName).toList();
+        System.out.println(namesFromIteration);
+
+        transactionTemplate.setReadOnly(true);
+        transactionTemplate.executeWithoutResult(status -> {
+            var names = repository.findAllStream(EmployeeResource.class)
+                    .map(EmployeeResource::name)
+                    .toList();
+            System.out.println(names);
+        });
     }
 
 
