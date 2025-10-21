@@ -121,5 +121,40 @@ class EmployeesRepositoryIT {
 
     // POST /api/employees/{id}/addresses
 
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void projectionQuery()  {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John");
+            repository.save(employee);
+        }
+
+        List<EmployeeResource> resources = repository.findAllResources();
+        for (EmployeeResource resource : resources) {
+            System.out.println(resource);
+        }
+    }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void projectionQueryDto()  {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John");
+            repository.save(employee);
+        }
+
+        List<EmployeeResource> resources = repository.findAllDto(EmployeeResource.class);
+        for (EmployeeResource resource : resources) {
+            System.out.println(resource);
+        }
+
+        List<EmployeeJustName> names = repository.findAllDto(EmployeeJustName.class);
+        for (EmployeeJustName name : names) {
+            System.out.println(name);
+        }
+
+    }
 
 }
