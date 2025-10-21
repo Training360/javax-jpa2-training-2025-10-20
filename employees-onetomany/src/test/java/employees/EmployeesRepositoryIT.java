@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -60,14 +62,36 @@ class EmployeesRepositoryIT {
 //        System.out.println(loaded.getName());
 //        System.out.println(loaded.getAddresses().getFirst().getCity());
 
-        transactionTemplate.executeWithoutResult(status -> {
-            var employees = repository.findAll();
-            for (Employee employee : employees) {
-                System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
-            }
-        });
+//        transactionTemplate.executeWithoutResult(status -> {
+//            var employees = repository.findAll();
+//            for (Employee employee : employees) {
+//                System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
+//            }
+//        });
+
+        var employees = repository.findAllWithAddresses();
+        for (Employee employee : employees) {
+            System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
+        }
 
 
+    }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void findAllWithEntityGraph() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John");
+            employee.addAddress(new Address("Budapest"));
+            employee.addAddress(new Address("Peking"));
+            repository.save(employee);
+        }
+
+        var employees = repository.findAllWithAddressesWithEntityGraph();
+        for (Employee employee : employees) {
+            System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
+        }
     }
 
 
