@@ -31,6 +31,9 @@ class EmployeesRepositoryIT {
     @Autowired
     TransactionTemplate transactionTemplate;
 
+    @Autowired
+    AddressRepository addressRepository;
+
     @Test
     @Commit
     void saveThenFindAll() {
@@ -93,6 +96,30 @@ class EmployeesRepositoryIT {
             System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
         }
     }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+   void addAddressToExistingEmployee()  {
+        var employee = new Employee("John");
+        employee.addAddress(new Address("Budapest"));
+        employee.addAddress(new Address("Peking"));
+        repository.save(employee);
+
+        transactionTemplate.executeWithoutResult(status -> {
+//            var loaded = repository.findById(employee.getId()).orElseThrow();
+            var loaded = repository.getReferenceById(employee.getId());
+            System.out.println(loaded.getClass().getName());
+//            System.out.println(loaded.getAddresses().getClass().getName()); // org.hibernate.collection.spi.PersistentBag
+//            loaded.addAddress(new Address("London"));
+            var address = new Address("London");
+            address.setEmployee(loaded);
+            addressRepository.save(address);
+//            repository.save(loaded);
+        });
+    }
+
+    // POST /api/employees/{id}/addresses
 
 
 }
