@@ -35,3 +35,17 @@ Accept: application/json
 
 ###
 DELETE http://localhost:8080/api/employees/1
+
+###
+GET http://localhost:8080/actuator
+
+###
+GET http://localhost:8080/actuator/loggers
+
+###
+POST http://localhost:8080/actuator/loggers/org.hibernate.SQL
+Content-Type: application/json
+
+{
+  "configuredLevel": "warn"
+}
