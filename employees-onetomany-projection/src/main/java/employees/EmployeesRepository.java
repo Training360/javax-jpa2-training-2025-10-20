@@ -22,4 +22,11 @@ public interface EmployeesRepository extends JpaRepository<Employee, Long> {
 
     @Query("select e from Employee e")
     <T> List<T> findAllDto(Class<T> dtoClass);
+
+    // emp_id, emp_name, address_city
+    @Query("""
+            select new employees.EmployeeWithCity(e.id, e.name, a.city)
+                from Employee e left join e.addresses a
+           """)
+    List<EmployeeWithCity> findAllStructuredDto();
 }

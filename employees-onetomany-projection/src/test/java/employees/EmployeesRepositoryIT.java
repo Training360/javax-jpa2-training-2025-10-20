@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -156,5 +157,38 @@ class EmployeesRepositoryIT {
         }
 
     }
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void structuredDto() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John" + i);
+            employee.addAddress(new Address("Budapest " + i));
+            employee.addAddress(new Address("Peking" + i));
+            repository.save(employee);
+        }
+
+        List<EmployeeWithCity> employees = repository.findAllStructuredDto();
+        List<EmployeeDto> dtos = transform(employees);
+        System.out.println(dtos);
+    }
+
+    public static List<EmployeeDto> transform(List<EmployeeWithCity> employeesWithCities) {
+        return employeesWithCities.stream()
+                .collect(Collectors.groupingBy(
+                        e -> new EmployeeKey(e.employeeId(), e.employeeName()),
+                        Collectors.mapping(EmployeeWithCity::city, Collectors.toList())
+                ))
+                .entrySet().stream()
+                .map(entry -> new EmployeeDto(
+                        entry.getKey().id(),
+                        entry.getKey().name(),
+                        entry.getValue()
+                ))
+                .toList();
+    }
+
+    private record EmployeeKey(long id, String name) {}
 
 }
