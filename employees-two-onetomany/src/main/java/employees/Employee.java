@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,11 +26,19 @@ public class Employee {
     // Az Employee ebben a kapcsolatban az inverse side
     // Az Address az owning side, ő felelős a kapcsolatért
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-    List<Address> addresses = new ArrayList<>();
+    Set<Address> addresses = new HashSet<>();
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+    Set<Phone> phones = new HashSet<>();
 
     public void addAddress(Address address) {
         addresses.add(address);
         address.setEmployee(this);
+    }
+
+    public void addPhone(Phone phone) {
+        phones.add(phone);
+        phone.setEmployee(this);
     }
 
     public Employee(String name) {

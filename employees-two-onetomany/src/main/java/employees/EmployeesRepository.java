@@ -16,4 +16,10 @@ public interface EmployeesRepository extends JpaRepository<Employee, Long> {
     @EntityGraph(attributePaths = {"addresses"})
     @Query("select e from Employee e")
     List<Employee> findAllWithAddressesWithEntityGraph();
+
+    @Query("select e from Employee e left join fetch e.phones left join fetch e.addresses")
+    List<Employee> findAllWithAddressesAndPhones();
+
+    @Query("select e from Employee e left join fetch e.phones")
+    List<Employee> findAllWithPhones();
 }

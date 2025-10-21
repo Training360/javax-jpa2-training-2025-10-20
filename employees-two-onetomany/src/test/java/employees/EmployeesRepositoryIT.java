@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
-@Sql(statements = {"delete from addresses", "delete from employees"})
+@Sql(statements = {"delete from phones", "delete from addresses", "delete from employees"})
 class EmployeesRepositoryIT {
 
     @Autowired
@@ -74,7 +74,7 @@ class EmployeesRepositoryIT {
 
         var employees = repository.findAllWithAddresses();
         for (Employee employee : employees) {
-            System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
+            System.out.println(employee.getName() + " " + employee.getAddresses().stream().toList().getFirst().getCity());
         }
 
 
@@ -93,7 +93,7 @@ class EmployeesRepositoryIT {
 
         var employees = repository.findAllWithAddressesWithEntityGraph();
         for (Employee employee : employees) {
-            System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
+            System.out.println(employee.getName() + " " + employee.getAddresses().stream().toList().getFirst().getCity());
         }
     }
 
@@ -121,5 +121,60 @@ class EmployeesRepositoryIT {
 
     // POST /api/employees/{id}/addresses
 
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void findAllWithAddressesAndPhones() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John");
+            for (int j = 0; j < 10; j++) {
+                employee.addAddress(new Address("Budapest"));
+            }
+            for (int j = 0; j < 10; j++) {
+                employee.addPhone(new Phone("12345678"));
+            }
+            repository.save(employee);
+        }
+
+        // 2 * N + 1
+//        transactionTemplate.setReadOnly(true);
+//        transactionTemplate.executeWithoutResult(status -> {
+//            var employees = repository.findAll();
+//            for (Employee employee : employees) {
+//                System.out.println("%s: %s - %s".formatted(
+//                        employee.getName(),
+//                        employee.getAddresses().getFirst().getCity(),
+//                        employee.getPhones().getFirst().getNumber()
+//                ));
+//            }
+//        });
+
+        // Descartes-szorzat lesz az eredménye 1000 rekord, amit idő átvinni a hálózaton
+//        var employees = repository.findAllWithAddressesAndPhones();
+//        for (Employee employee : employees) {
+//                System.out.println("%s: %s - %s".formatted(
+//                        employee.getName(),
+//                        employee.getAddresses().stream().toList().getFirst().getCity(),
+//                        employee.getPhones().stream().toList().getFirst().getNumber()
+//                ));
+//            }
+
+        transactionTemplate.setReadOnly(true);
+        transactionTemplate.executeWithoutResult(status -> {
+            // ezt ne töröld ki, mert ez rántja be a persistence contextbe a címeket, hogy ne legyen
+            // N+1 probléma
+           repository.findAllWithAddresses(); // A visszatérési értékét ignoráljuk
+
+           var employees = repository.findAllWithPhones();
+
+            for (Employee employee : employees) {
+                System.out.println("%s: %s - %s".formatted(
+                        employee.getName(),
+                        employee.getAddresses().stream().toList().getFirst().getCity(),
+                        employee.getPhones().stream().toList().getFirst().getNumber()
+                ));
+            }
+        });
+    }
 
 }
