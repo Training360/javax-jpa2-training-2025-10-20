@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Propagation;
@@ -72,7 +74,7 @@ class EmployeesRepositoryIT {
 //            }
 //        });
 
-        var employees = repository.findAllWithAddresses();
+        var employees = repository.findAllWithAddresses(Pageable.unpaged());
         for (Employee employee : employees) {
             System.out.println(employee.getName() + " " + employee.getAddresses().getFirst().getCity());
         }
@@ -120,6 +122,29 @@ class EmployeesRepositoryIT {
     }
 
     // POST /api/employees/{id}/addresses
+
+    @Test
+    @Commit
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void paging() {
+        for (int i = 0; i < 10; i++) {
+            var employee = new Employee("John " + i);
+            employee.addAddress(new Address("Budapest"));
+            employee.addAddress(new Address("Peking"));
+            repository.save(employee);
+        }
+
+//        var employees = repository.findAll(PageRequest.of(2, 3));
+//        for (Employee employee : employees) {
+//            System.out.println(employee.getName());
+//        }
+
+        var ids = repository.findAllIds(PageRequest.of(2, 3));
+        var employees = repository.findAllById(ids);
+        for (Employee employee : employees) {
+            System.out.println(employee.getName());
+        }
+    }
 
 
 }
